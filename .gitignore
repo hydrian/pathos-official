@@ -217,3 +217,5 @@ FakesAssemblies/
 *.Atlas
 *.Album
 
+# Flatpak temporary build dir
+.flatpak/
