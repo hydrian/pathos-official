@@ -219,3 +219,4 @@ FakesAssemblies/
 
 # Flatpak temporary build dir
 .flatpak/
+.flatpak-builder/
