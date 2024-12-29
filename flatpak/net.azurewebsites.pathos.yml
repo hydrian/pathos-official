@@ -1,0 +1,73 @@
+---
+id: net.azurewebsites.pathos
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+base: org.winehq.Wine
+base-version: stable-24.08
+command: 'pathos'
+build-options: 
+  env: 
+    WINEDLLOVERRIDES: 'mscoree=d'
+finish-args:
+  - --allow=devel # For Wine crash handling
+  - --env=WINEDLLPATH=/app/dlls/lib32:/app/dlls/lib:/app/lib32/wine/wined3d:/app/lib/wine/wined3d
+    # Need to link .desktop files
+  - --filesystem=~/.local/share/applications:create
+  - --share=network
+  - --socket=pulseaudio
+  - --socket=fallback-x11
+  - --filesystem=~/Games
+  - --filesystem=~/.wine
+  - --filesystem=~/.var/app/org.winehq.Wine/data/wine
+  - --filesystem=xdg-desktop
+  - --env=DOTNET_ROOT=/app/lib/dotnet
+  - --env=WINEPREFIX=${XDG_DATA_HOME}/wineprefix
+inherit-extensions:
+  - org.freedesktop.Platform.GL32
+  - org.freedesktop.Platform.ffmpeg-full
+  - org.freedesktop.Platform.ffmpeg_full.i386
+  - org.winehq.Wine.DLLs
+modules:
+  - name: "Pathos"
+    buildsystem: simple
+    build-commands:
+      - mkdir "${XDG_DATA_HOME}/wineprefix" 
+      - install -d /app/bin
+      - install pathos-installer /app/bin
+      - install pathos /app/bin
+    sources:
+      - type: script
+        only-arches:
+          - x86_64
+        dest-filename: 'pathos-installer'
+        commands:
+          - if [ -e "${WINEPREFIX}/dosdevices/c:/Games/Pathos" ] ; then
+          - '    echo "This prefix already has an exisiting ''Pathos'' install at ${WINEPREFIX}"'
+          - '    echo "In order to install ''Pathos'' you must move or delete the current prefix."'
+          - '    exit 1'
+          - fi
+          - echo "Downloading Pathos installer..."
+          - curl -L --progress-bar --output "${XDG_CACHE_HOME}/PathosSetup.exe" "https://www.dropbox.com/scl/fi/s4vrz7uixwltygqcltjcn/PathosSetup.exe?rlkey=0w7ar56sh8c5643gsbrmdrsj9&st=goqhhy2n&dl=1"
+          - echo "Setting-up wine prefix..."
+          - echo "$WINEPREFIX"
+          - WINEDLLOVERRIDES=mscoree=d WINEARCH=win64 wineboot
+          - echo "Running Pathos installer..."
+          - wine64 "${XDG_CACHE_HOME}/PathosSetup.exe" "/verysilent" "/dir=c:/Games/Pathos" "${@}"
+      - type: script
+        only-arches:
+          - x86_64
+        dest-filename: 'pathos'
+        commands:
+          - if [ -z "$WINEPREFIX" ] ; then
+          - '    echo "No wine prefix set or is empty, abort."'
+          - '    exit 1'
+          - fi
+          - if ! [ -e "${WINEPREFIX}/dosdevices/c:/Games/Pathos/Pathos.exe" ] ; then
+          - '    source /app/bin/pathos-installer'
+          - '    if [[ $? != 0 ]] ; then'
+          - '        echo "Installation failed, abort."'
+          - '        exit 1'
+          - '    fi'
+          - fi
+          - '/app/bin/wine64 "c:/Games/Pathos.exe"'
