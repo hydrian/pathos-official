@@ -1,8 +1,10 @@
 EquipAction,employ,wyposaż
 EquipAction,wield,wyposaż
+SonicName,fizzle,syczenie
+SonicName,hiss,syczenie
 SonicName,groan,jęk
 SonicName,moan,jęk
-SonicName,shotgun blast,wystrzał z karabinu
-SonicName,shotgun burst,wystrzał z karabinu
+SonicName,growl,ryk
+SonicName,roar,ryk
 SonicName,hit,uderzenie
 SonicName,thump,uderzenie
