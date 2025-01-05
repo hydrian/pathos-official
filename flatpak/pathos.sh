@@ -1,6 +1,5 @@
 #/bin/bash -x
 WINEPREFIX='/var/data/wineprefix'
-echo "Paramenters: ${0}"
 PATHOS_WIN_DIR='c:/Games/Pathos'
 PATHOS_WINE_DIR="${WINEPREFIX}/drive_c/Games/Pathos"
 PATHOS_WIN_EXE="${PATHOS_WIN_DIR}/PathosGame.exe"
@@ -33,7 +32,7 @@ function install_pathos {
   echo "Downloading Pathos installer..."
   curl -L --progress-bar --output "${INSTALLER_FILE}" "https://www.dropbox.com/scl/fi/s4vrz7uixwltygqcltjcn/PathosSetup.exe?rlkey=0w7ar56sh8c5643gsbrmdrsj9&st=goqhhy2n&dl=1"
   echo "Running Pathos installer..."
-  wine64 "${INSTALLER_FILE}" "/verysilent" "/dir=${PATHOS_WIN_DIR}" "/LOG"
+  wine64 "${INSTALLER_FILE}" "/verysilent" "/dir=${PATHOS_WIN_DIR}" "/LOG" "/DoNotLaunchGame"
   if [ $? -eq 0 ] ; then
     echo "Pathos installer successful"
   else
@@ -62,6 +61,7 @@ function update_pathos {
 ############
 ### MAIN ###
 ############
+echo "Paramters: ${@}"
 if [ ! -d "${WINEPREFIX}" ] ; then
   setup_wine 
   if [ $? -eq 0 ] ; then
@@ -79,5 +79,5 @@ if [ ! -e "${PATHOS_WINE_EXE}" ] ; then
       exit 1
   fi
 fi
-wine64 "${PATHOS_WIN_EXE}" 'windowed-mode'
+wine64 "${PATHOS_WIN_EXE}" 'windowed-mode' 
 exit $?
