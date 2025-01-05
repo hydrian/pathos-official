@@ -1,73 +1,48 @@
 ---
+
 id: net.azurewebsites.pathos
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
 base: org.winehq.Wine
 base-version: stable-24.08
-command: 'pathos'
+command: 'pathos.sh'
 build-options: 
   env: 
-    WINEDLLOVERRIDES: 'mscoree=d'
+    WINEDLLOVERRIDES: 'mscoree=d;mshtml=d'
+    WINEPREFIX: '/var/data/wineprefix'
+    LD_LIBRARY_PATH: '/app/lib32:/app/lib32/wine:/lib32:/lib32/wine'
 finish-args:
+  - --env=LD_LIBRARY_PATH=/app/lib:/usr/lib/x86_64-linux-gnu/GL/default/lib:/usr/lib/x86_64-linux-gnu/openh264/extra:/usr/lib/x86_64-linux-gnu/GL/default/lib:/app/lib32:/app/lib32/wine
   - --allow=devel # For Wine crash handling
-  - --env=WINEDLLPATH=/app/dlls/lib32:/app/dlls/lib:/app/lib32/wine/wined3d:/app/lib/wine/wined3d
+ # - --env=WINEDLLPATH=/app/dlls/lib32:/app/dlls/lib:/app/lib32/wine/wined3d:/app/lib/wine/wined3d
     # Need to link .desktop files
+  - --allow=multiarch
   - --filesystem=~/.local/share/applications:create
   - --share=network
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --device=dri
+  - --share=ipc
   - --socket=pulseaudio
-  - --socket=fallback-x11
-  - --filesystem=~/Games
-  - --filesystem=~/.wine
-  - --filesystem=~/.var/app/org.winehq.Wine/data/wine
+  - --socket=x11
   - --filesystem=xdg-desktop
+  - --filesystem=xdg-data
+  - --filesystem=xdg-config
+  - --filesystem=xdg-cache
   - --env=DOTNET_ROOT=/app/lib/dotnet
-  - --env=WINEPREFIX=${XDG_DATA_HOME}/wineprefix
+  - --env=WINEPREFIX=/var/data/wineprefix
+  - --env=WINEDLLOVERRIDES=\'mscoree=d;mshtml=d\' 
 inherit-extensions:
-  - org.freedesktop.Platform.GL32
-  - org.freedesktop.Platform.ffmpeg-full
-  - org.freedesktop.Platform.ffmpeg_full.i386
-  - org.winehq.Wine.DLLs
+  - org.freedesktop.Platform.Compat.i386
 modules:
   - name: "Pathos"
     buildsystem: simple
     build-commands:
-      - mkdir "${XDG_DATA_HOME}/wineprefix" 
-      - install -d /app/bin
-      - install pathos-installer /app/bin
-      - install pathos /app/bin
+      - export 
+      - install pathos.sh /app/bin
     sources:
-      - type: script
+      - type: file
         only-arches:
           - x86_64
-        dest-filename: 'pathos-installer'
-        commands:
-          - if [ -e "${WINEPREFIX}/dosdevices/c:/Games/Pathos" ] ; then
-          - '    echo "This prefix already has an exisiting ''Pathos'' install at ${WINEPREFIX}"'
-          - '    echo "In order to install ''Pathos'' you must move or delete the current prefix."'
-          - '    exit 1'
-          - fi
-          - echo "Downloading Pathos installer..."
-          - curl -L --progress-bar --output "${XDG_CACHE_HOME}/PathosSetup.exe" "https://www.dropbox.com/scl/fi/s4vrz7uixwltygqcltjcn/PathosSetup.exe?rlkey=0w7ar56sh8c5643gsbrmdrsj9&st=goqhhy2n&dl=1"
-          - echo "Setting-up wine prefix..."
-          - echo "$WINEPREFIX"
-          - WINEDLLOVERRIDES=mscoree=d WINEARCH=win64 wineboot
-          - echo "Running Pathos installer..."
-          - wine64 "${XDG_CACHE_HOME}/PathosSetup.exe" "/verysilent" "/dir=c:/Games/Pathos" "${@}"
-      - type: script
-        only-arches:
-          - x86_64
-        dest-filename: 'pathos'
-        commands:
-          - if [ -z "$WINEPREFIX" ] ; then
-          - '    echo "No wine prefix set or is empty, abort."'
-          - '    exit 1'
-          - fi
-          - if ! [ -e "${WINEPREFIX}/dosdevices/c:/Games/Pathos/Pathos.exe" ] ; then
-          - '    source /app/bin/pathos-installer'
-          - '    if [[ $? != 0 ]] ; then'
-          - '        echo "Installation failed, abort."'
-          - '        exit 1'
-          - '    fi'
-          - fi
-          - '/app/bin/wine64 "c:/Games/Pathos.exe"'
+        path: pathos.sh
+        
